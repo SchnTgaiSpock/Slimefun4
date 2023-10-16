@@ -20,8 +20,8 @@ import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 
 public class RecipeBuilder {
 
-    private RecipeType type;
-    private RecipeComponent<?>[] ingredients;
+    private RecipeType type = RecipeType.ENHANCED_CRAFTING_TABLE;
+    private RecipeComponent<?>[] ingredients = new RecipeComponent[9];
     private RecipeShape shape = RecipeShape.TRANSLATED;
     private RecipeOutput output = RecipeOutput.EMPTY;
     private BiFunction<RecipeComponent<?>[], RecipeShape, RecipeIngredients> ingredientsProducer = CraftingGrid::new;
@@ -48,16 +48,16 @@ public class RecipeBuilder {
                 this.ingredients[i] = new SingleRecipeComponent(item);
             } else if (ingredient instanceof final Material mat) {
                 this.ingredients[i] = new SingleRecipeComponent(new ItemStack(mat));
+            } else if (ingredient instanceof final SlimefunTag tag) {
+                this.ingredients[i] = new TagRecipeComponent(tag);
             } else if (ingredient instanceof final Set<?> group) {
                 if (group.isEmpty()) {
-                    continue;
+                    this.ingredients[i] = RecipeComponent.EMPTY;
                 }
 
                 if (group.stream().findAny().get() instanceof ItemStack) {
                     this.ingredients[i] = new GroupRecipeComponent((Set<ItemStack>) group);
                 }
-            } else if (ingredient instanceof final SlimefunTag tag) {
-                this.ingredients[i] = new TagRecipeComponent(tag);
             }
         }
 

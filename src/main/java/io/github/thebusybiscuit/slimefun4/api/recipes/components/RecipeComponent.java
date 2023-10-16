@@ -12,7 +12,7 @@ import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 
 public interface RecipeComponent<T> {
 
-    public static SingleRecipeComponent empty = new SingleRecipeComponent(new ItemStack(Material.AIR));
+    public static SingleRecipeComponent EMPTY = new SingleRecipeComponent(new ItemStack(Material.AIR));
 
     public @Nonnull T getComponent();
     public boolean matches(@Nullable ItemStack item);

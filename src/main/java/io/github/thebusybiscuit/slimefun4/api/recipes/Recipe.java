@@ -1,6 +1,7 @@
 package io.github.thebusybiscuit.slimefun4.api.recipes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,11 +20,61 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.inputs.RecipeIngredients;
 import io.github.thebusybiscuit.slimefun4.api.recipes.outputs.RecipeOutput;
 
 /**
- * Holds all item recipes
+ * Holds all item recipes. 
+ * 
+ * It is the responsibilty of the implementation to
+ * ensure there are no ambiguous recipes
  * 
  * @author SchnTgaiSpock
  */
 public class Recipe {
+
+    public static class RecipeSearchResult {
+        private final @Nullable Recipe recipe;
+        private final boolean canCraft;
+        private final boolean recipeExists;
+    
+        public RecipeSearchResult(Recipe recipe, boolean canCraft, boolean recipeExists) {
+            if (recipe == null && recipeExists) {
+                throw new IllegalArgumentException("Recipe must be non-null when recipeExists is true");
+            }
+
+            this.recipe = recipe;
+            this.canCraft = canCraft;
+            this.recipeExists = recipeExists;
+        }
+    
+        /**
+         * @return The recipe that was matched, or null if none were matched.
+         * If {@code recipeExists()} returns true, this will be non-null
+         */
+        @Nullable
+        public Recipe getRecipe() {
+            return recipe;
+        }
+    
+        /**
+         * @return Whether or not the recipe could be crafted.
+         * <ul>
+         * <li><b>IMPORTANT:</b> If this returns false, the return value
+         * of {@code recipeExists} might return false even if a recipe
+         * exists.
+         */
+        public boolean canCraft() {
+            return canCraft;
+        }
+    
+        /**
+         * @return Whether or not the recipe exists on the RecipeType searched.
+         * If true, {@code getRecipe} will be non-null
+         * <ul>
+         * <li><b>IMPORTANT:</b> If {@code canCraft()} returns false, this function
+         * might return false even if a recipe exists.
+         */
+        public boolean recipeExists() {
+            return recipeExists;
+        }
+    }
 
     private static final Map<RecipeType, List<Recipe>> recipes = new HashMap<>();
     private static final int CACHE_SIZE = 50;
@@ -31,7 +82,7 @@ public class Recipe {
         protected boolean removeEldestEntry(Map.Entry<Integer, Recipe> eldest) {
             return size() >= CACHE_SIZE;
         };
-    };
+    }; // TODO: Only cache when can craft more than 1 of the recipe
 
     final RecipeIngredients ingredients;
     final RecipeOutput outputs;
@@ -61,8 +112,26 @@ public class Recipe {
         return Collections.unmodifiableMap(recipes);
     }
 
-    @ParametersAreNonnullByDefault // wtf java
-    public static @Nullable Recipe searchRecipes(
+    public static Map<Integer, Recipe> getRecentlyused() {
+        return Collections.unmodifiableMap(recentlyUsed);
+    }
+
+    /**
+     * Searches recipes for a given ingredient array
+     * @param type The type of recipe to search for
+     * @param ingredients The ingredients that are being searched on
+     * @param canCraft A predicate taking a recipe, and returning if it
+     * is able to be crafted. This should be used when extending {@code Recipe}
+     * and imposing new resources
+     * @param consumeIngredients Whether or not to consume the ingredients if a
+     * valid recipe was found and is able to be crafted
+     * @param cache Save the recipe to the LRU cache if the recipe can be crafted
+     * multiple times from the given ingredients
+     * @param hash The hash of the ingredients to be used when cacheing
+     * @return The result of the search
+     */
+    @ParametersAreNonnullByDefault
+    public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type,
         ItemStack[] ingredients,
         @Nullable Predicate<Recipe> canCraft,
@@ -72,23 +141,29 @@ public class Recipe {
     ) {
         if (recentlyUsed.containsKey(hash)) {
             final Recipe recipe = recentlyUsed.get(hash);
-            return canCraft.test(recipe) ? recipe : null;
+            return new RecipeSearchResult(recipe, canCraft != null && canCraft.test(recipe), true);
         }
 
-        for (Recipe recipe : recipes.get(type)) {
-            if (canCraft != null && canCraft.test(recipe) && recipe.matches(ingredients, consumeIngredients)) {
-                if (cache) {
+        final boolean canOnlyCraft1 = Arrays.stream(ingredients).anyMatch(s -> s.getAmount() == 1);
+
+        for (final Recipe recipe : recipes.get(type)) {
+            final boolean craftable = canCraft != null && canCraft.test(recipe);
+            if (!craftable) {
+                continue;
+            }
+            if (recipe.matches(ingredients, consumeIngredients)) {
+                if (cache && !canOnlyCraft1) {
                     recentlyUsed.put(hash, recipe);
                 }
-                return recipe;
+                return new RecipeSearchResult(recipe, true, true);
             }
         }
 
-        return null;
+        return new RecipeSearchResult(null, false, false);
     }
 
     @ParametersAreNonnullByDefault
-    public static @Nullable Recipe searchRecipes(
+    public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type,
         ItemStack[] ingredients,
         @Nullable Predicate<Recipe> canCraft,
@@ -103,7 +178,7 @@ public class Recipe {
     }
 
     @ParametersAreNonnullByDefault
-    public static @Nullable Recipe searchRecipes(
+    public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type, 
         ItemStack[] ingredients,
         @Nullable Predicate<Recipe> canCraft
@@ -112,7 +187,7 @@ public class Recipe {
     }
 
     @ParametersAreNonnullByDefault
-    public static @Nullable Recipe searchRecipes(
+    public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type, 
         ItemStack[] ingredients
     ) {

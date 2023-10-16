@@ -7,7 +7,10 @@ public class ItemRecipeOutput implements RecipeOutput {
     private final ItemStack[] outputs;
 
     public ItemRecipeOutput(ItemStack[] outputs) {
-        this.outputs = outputs;
+        this.outputs = new ItemStack[outputs.length];
+        for (int i = 0; i < outputs.length; i++) {
+            this.outputs[i] = outputs[i].clone();
+        }
     }
 
     @Override

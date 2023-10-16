@@ -1,5 +1,6 @@
 package io.github.thebusybiscuit.slimefun4.implementation.tasks;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -34,7 +35,7 @@ public class AsyncRecipeChoiceTask implements Runnable {
 
     private static final int UPDATE_INTERVAL = 14;
 
-    private final Map<Integer, LoopIterator<Material>> iterators = new HashMap<>();
+    private final Map<Integer, LoopIterator<ItemStack>> iterators = new HashMap<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     private Inventory inventory;
@@ -53,13 +54,25 @@ public class AsyncRecipeChoiceTask implements Runnable {
         id = Bukkit.getScheduler().runTaskTimerAsynchronously(Slimefun.instance(), this, 0, UPDATE_INTERVAL).getTaskId();
     }
 
-    public void add(int slot, @Nonnull MaterialChoice choice) {
-        Validate.notNull(choice, "Cannot add a null RecipeChoice");
+    public void add(int slot, @Nonnull MaterialChoice choices) {
+        Validate.notNull(choices, "Cannot add a null RecipeChoice");
 
         lock.writeLock().lock();
 
         try {
-            iterators.put(slot, new LoopIterator<>(choice.getChoices()));
+            iterators.put(slot, new LoopIterator<>(choices.getChoices().stream().map(m -> new ItemStack(m)).toList()));
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    public void add(int slot, @Nonnull ItemStack... choices) {
+        Validate.notNull(choices, "Cannot add a null RecipeChoice");
+
+        lock.writeLock().lock();
+
+        try {
+            iterators.put(slot, new LoopIterator<>(Arrays.asList(choices)));
         } finally {
             lock.writeLock().unlock();
         }
@@ -71,7 +84,7 @@ public class AsyncRecipeChoiceTask implements Runnable {
         lock.writeLock().lock();
 
         try {
-            iterators.put(slot, new LoopIterator<>(tag.getValues()));
+            iterators.put(slot, new LoopIterator<>(tag.getValues().stream().map(m -> new ItemStack(m)).toList()));
         } finally {
             lock.writeLock().unlock();
         }
@@ -117,8 +130,8 @@ public class AsyncRecipeChoiceTask implements Runnable {
         lock.readLock().lock();
 
         try {
-            for (Map.Entry<Integer, LoopIterator<Material>> entry : iterators.entrySet()) {
-                inventory.setItem(entry.getKey(), new ItemStack(entry.getValue().next()));
+            for (Map.Entry<Integer, LoopIterator<ItemStack>> entry : iterators.entrySet()) {
+                inventory.setItem(entry.getKey(), entry.getValue().next());
             }
         } finally {
             lock.readLock().unlock();

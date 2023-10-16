@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-import io.github.bakedlibs.dough.items.ItemUtils;
+import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 
 public class SingleRecipeComponent implements RecipeComponent<ItemStack> {
 
@@ -18,7 +18,7 @@ public class SingleRecipeComponent implements RecipeComponent<ItemStack> {
 
     @Override
     public boolean matches(@Nullable ItemStack item) {
-        return ItemUtils.canStack(component, item);
+        return SlimefunUtils.isItemSimilar(component, item, true);
     }
 
     @Override
