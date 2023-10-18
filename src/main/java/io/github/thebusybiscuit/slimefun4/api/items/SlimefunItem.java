@@ -33,6 +33,8 @@ import io.github.thebusybiscuit.slimefun4.api.exceptions.MissingDependencyExcept
 import io.github.thebusybiscuit.slimefun4.api.exceptions.UnregisteredItemException;
 import io.github.thebusybiscuit.slimefun4.api.exceptions.WrongItemStackException;
 import io.github.thebusybiscuit.slimefun4.api.player.PlayerProfile;
+import io.github.thebusybiscuit.slimefun4.api.recipes.Recipe;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeBuilder;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
 import io.github.thebusybiscuit.slimefun4.core.SlimefunRegistry;
@@ -784,7 +786,7 @@ public class SlimefunItem implements Placeable {
             itemGroup.add(this);
         }
 
-        recipeType.register(recipe, getRecipeOutput());
+        Recipe.registerRecipes(recipeType, new RecipeBuilder().inputs(getRecipe()).outputs(getRecipeOutput()).build());
     }
 
     /**

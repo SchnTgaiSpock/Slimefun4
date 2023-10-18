@@ -2,7 +2,6 @@ package io.github.thebusybiscuit.slimefun4.api.recipes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +31,6 @@ import io.github.thebusybiscuit.slimefun4.implementation.SlimefunItems;
 import io.github.thebusybiscuit.slimefun4.implementation.items.altar.AltarRecipe;
 import io.github.thebusybiscuit.slimefun4.implementation.items.altar.AncientAltar;
 
-// TODO: Remove this class and rewrite the recipe system
 public class RecipeType implements Keyed {
 
     public static final RecipeType MULTIBLOCK = new RecipeType(new NamespacedKey(Slimefun.instance(), "multiblock"), new CustomItemStack(Material.BRICKS, "&bMultiBlock", "", "&a&oBuild it in the World"));
@@ -70,64 +68,51 @@ public class RecipeType implements Keyed {
 
     private final ItemStack item;
     private final NamespacedKey key;
-    private final String machine;
-    private BiConsumer<ItemStack[], ItemStack> consumer;
 
     private RecipeType() {
         this.item = null;
-        this.machine = "";
         this.key = new NamespacedKey(Slimefun.instance(), "null");
     }
 
-    public RecipeType(ItemStack item, String machine) {
+    public RecipeType(ItemStack item, String id) {
         this.item = item;
-        this.machine = machine;
 
-        if (machine.length() > 0) {
-            this.key = new NamespacedKey(Slimefun.instance(), machine.toLowerCase(Locale.ROOT));
+        if (id.length() > 0) {
+            this.key = new NamespacedKey(Slimefun.instance(), id.toLowerCase(Locale.ROOT));
         } else {
             this.key = new NamespacedKey(Slimefun.instance(), "unknown");
         }
     }
 
     public RecipeType(NamespacedKey key, SlimefunItemStack slimefunItem, String... lore) {
-        this(key, slimefunItem, null, lore);
+        this(key, new CustomItemStack(slimefunItem, null, lore));
     }
 
+    @Deprecated
     public RecipeType(NamespacedKey key, ItemStack item, BiConsumer<ItemStack[], ItemStack> callback, String... lore) {
         this.item = new CustomItemStack(item, null, lore);
         this.key = key;
-        this.consumer = callback;
-
-        if (item instanceof SlimefunItemStack slimefunItemStack) {
-            this.machine = slimefunItemStack.getItemId();
-        } else {
-            this.machine = "";
-        }
     }
 
     public RecipeType(NamespacedKey key, ItemStack item) {
         this.key = key;
         this.item = item;
-        this.machine = item instanceof SlimefunItemStack slimefunItemStack ? slimefunItemStack.getItemId() : "";
     }
 
     public RecipeType(MinecraftRecipe<?> recipe) {
         this.item = new ItemStack(recipe.getMachine());
-        this.machine = "";
         this.key = NamespacedKey.minecraft(recipe.getRecipeClass().getSimpleName().toLowerCase(Locale.ROOT).replace("recipe", ""));
     }
 
+    /**
+     * This method is deprecated, use Recipe#registerRecipes instead
+     */
+    @Deprecated
     public void register(ItemStack[] recipe, ItemStack result) {
-        if (consumer != null) {
-            consumer.accept(recipe, result);
-        } else {
-            SlimefunItem slimefunItem = SlimefunItem.getById(this.machine);
-
-            if (slimefunItem instanceof MultiBlockMachine mbm) {
-                mbm.addRecipe(recipe, result);
-            }
-        }
+        Recipe.registerRecipes(this, new RecipeBuilder()
+            .inputs(recipe)
+            .outputs(result)
+            .build());
     }
 
     public @Nullable ItemStack toItem() {
@@ -138,8 +123,13 @@ public class RecipeType implements Keyed {
         return Slimefun.getLocalization().getRecipeTypeItem(p, this);
     }
 
+    /**
+     * This method is deprecated! RecipeType is no longer bound to a single machine
+     * @return {@code null}
+     */
+    @Deprecated
     public SlimefunItem getMachine() {
-        return SlimefunItem.getById(machine);
+        return null;
     }
 
     @Override
@@ -177,59 +167,41 @@ public class RecipeType implements Keyed {
         Slimefun.getRegistry().getMobDrops().put(entity, dropping);
     }
 
+    /**
+     * This method is deprecated. Use {@code Recipe#getRecipes(recipeType)} instead
+     * @return An empty list
+     */
+    @Deprecated
     public static List<ItemStack> getRecipeInputs(MultiBlockMachine machine) {
-        if (machine == null) {
-            return new ArrayList<>();
-        }
-
-        List<ItemStack[]> recipes = machine.getRecipes();
-        List<ItemStack> convertible = new ArrayList<>();
-
-        for (int i = 0; i < recipes.size(); i++) {
-            if (i % 2 == 0) {
-                convertible.add(recipes.get(i)[0]);
-            }
-        }
-
-        return convertible;
+        return new ArrayList<>();
     }
 
+
+    /**
+     * This method is deprecated. Use {@code Recipe#getRecipes(recipeType)} instead
+     * @return An empty list
+     */
+    @Deprecated
     public static List<ItemStack[]> getRecipeInputList(MultiBlockMachine machine) {
-        if (machine == null) {
-            return new ArrayList<>();
-        }
-
-        List<ItemStack[]> recipes = machine.getRecipes();
-        List<ItemStack[]> convertible = new ArrayList<>();
-
-        for (int i = 0; i < recipes.size(); i++) {
-            if (i % 2 == 0) {
-                convertible.add(recipes.get(i));
-            }
-        }
-
-        convertible.sort(Comparator.comparing(recipe -> {
-            int emptySlots = 9;
-
-            for (ItemStack ingredient : recipe) {
-                if (ingredient != null) {
-                    emptySlots--;
-                }
-            }
-
-            return emptySlots;
-        }));
-
-        return convertible;
+        return new ArrayList<>();
     }
 
+    /**
+     * This method is deprecated. Use {@code Recipe#searchRecipes(type, inputs)} instead
+     * @return An itemstack of air
+     */
+    @Deprecated
     public static ItemStack getRecipeOutput(MultiBlockMachine machine, ItemStack input) {
-        List<ItemStack[]> recipes = machine.getRecipes();
-        return recipes.get(((getRecipeInputs(machine).indexOf(input) * 2) + 1))[0].clone();
+        return new ItemStack(Material.AIR);
     }
 
+
+    /**
+     * This method is deprecated. Use {@code Recipe#searchRecipes(type, inputs)} instead
+     * @return An itemstack of air
+     */
+    @Deprecated
     public static ItemStack getRecipeOutputList(MultiBlockMachine machine, ItemStack[] input) {
-        List<ItemStack[]> recipes = machine.getRecipes();
-        return recipes.get((recipes.indexOf(input) + 1))[0];
+        return new ItemStack(Material.AIR);
     }
 }

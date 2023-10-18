@@ -16,5 +16,10 @@ public class WeightedRecipeOutput implements RecipeOutput {
     public ItemStack[] getOutputs() {
         return new ItemStack[] { outputTable.generate().clone() };
     }
+
+    @Override
+    public boolean isSingleItem() {
+        return outputTable.size() == 1;
+    }
     
 }

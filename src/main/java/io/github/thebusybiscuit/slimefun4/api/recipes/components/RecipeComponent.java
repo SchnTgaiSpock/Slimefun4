@@ -10,24 +10,47 @@ import org.bukkit.inventory.ItemStack;
 
 import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 
+/**
+ * A component (input) in a recipe.
+ * 
+ * @author SchnTgaiSpock
+ */
 public interface RecipeComponent<T> {
 
+    /**
+     * Represents the empty component
+     */
     public static SingleRecipeComponent EMPTY = new SingleRecipeComponent(new ItemStack(Material.AIR));
 
     public @Nonnull T getComponent();
-    public boolean matches(@Nullable ItemStack item);
-    public boolean isEmpty();
-    public ItemStack getDisplayItem();
 
-    public static @Nonnull SingleRecipeComponent of(@Nonnull ItemStack item) {
+    /**
+     * Determines if the given item can be used as this component in a recipe.
+     * @param item The item to match
+     * @return If the item is a match
+     */
+    public boolean matches(@Nullable ItemStack item);
+
+    public boolean isEmpty();
+
+    /**
+     * Returns the item to be used in the recipe section of an item's guide entry
+     * @return
+     */
+    public @Nonnull ItemStack getDisplayItem();
+
+    @Nonnull
+    public static SingleRecipeComponent of(@Nonnull ItemStack item) {
         return new SingleRecipeComponent(item);
     }
 
-    public static @Nonnull GroupRecipeComponent of(@Nonnull Set<ItemStack> group) {
+    @Nonnull 
+    public static GroupRecipeComponent of(@Nonnull Set<ItemStack> group) {
         return new GroupRecipeComponent(group);
     }
 
-    public static @Nonnull TagRecipeComponent of(@Nonnull SlimefunTag tag) {
+    @Nonnull 
+    public static TagRecipeComponent of(@Nonnull SlimefunTag tag) {
         return new TagRecipeComponent(tag);
     }
 

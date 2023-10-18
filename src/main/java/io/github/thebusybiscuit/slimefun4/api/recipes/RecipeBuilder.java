@@ -12,7 +12,7 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.components.RecipeComponent
 import io.github.thebusybiscuit.slimefun4.api.recipes.components.SingleRecipeComponent;
 import io.github.thebusybiscuit.slimefun4.api.recipes.components.TagRecipeComponent;
 import io.github.thebusybiscuit.slimefun4.api.recipes.inputs.CraftingGrid;
-import io.github.thebusybiscuit.slimefun4.api.recipes.inputs.RecipeIngredients;
+import io.github.thebusybiscuit.slimefun4.api.recipes.inputs.RecipeInputs;
 import io.github.thebusybiscuit.slimefun4.api.recipes.outputs.ItemRecipeOutput;
 import io.github.thebusybiscuit.slimefun4.api.recipes.outputs.RecipeOutput;
 import io.github.thebusybiscuit.slimefun4.api.recipes.outputs.WeightedRecipeOutput;
@@ -21,10 +21,10 @@ import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 public class RecipeBuilder {
 
     private RecipeType type = RecipeType.ENHANCED_CRAFTING_TABLE;
-    private RecipeComponent<?>[] ingredients = new RecipeComponent[9];
+    private RecipeComponent<?>[] inputs = new RecipeComponent[9];
     private RecipeShape shape = RecipeShape.TRANSLATED;
     private RecipeOutput output = RecipeOutput.EMPTY;
-    private BiFunction<RecipeComponent<?>[], RecipeShape, RecipeIngredients> ingredientsProducer = CraftingGrid::new;
+    private BiFunction<RecipeComponent<?>[], RecipeShape, RecipeInputs> inputsProducer = CraftingGrid::new;
 
     public RecipeBuilder() {
     }
@@ -40,23 +40,23 @@ public class RecipeBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    public RecipeBuilder ingredients(Object... ingredients) {
-        this.ingredients = new RecipeComponent<?>[ingredients.length];
-        for (int i = 0; i < ingredients.length; i++) {
-            final Object ingredient = ingredients[i];
-            if (ingredient instanceof final ItemStack item) {
-                this.ingredients[i] = new SingleRecipeComponent(item);
-            } else if (ingredient instanceof final Material mat) {
-                this.ingredients[i] = new SingleRecipeComponent(new ItemStack(mat));
-            } else if (ingredient instanceof final SlimefunTag tag) {
-                this.ingredients[i] = new TagRecipeComponent(tag);
-            } else if (ingredient instanceof final Set<?> group) {
+    public RecipeBuilder inputs(Object... inputs) {
+        this.inputs = new RecipeComponent<?>[inputs.length];
+        for (int i = 0; i < inputs.length; i++) {
+            final Object input = inputs[i];
+            if (input instanceof final ItemStack item) {
+                this.inputs[i] = new SingleRecipeComponent(item);
+            } else if (input instanceof final Material mat) {
+                this.inputs[i] = new SingleRecipeComponent(new ItemStack(mat));
+            } else if (input instanceof final SlimefunTag tag) {
+                this.inputs[i] = new TagRecipeComponent(tag);
+            } else if (input instanceof final Set<?> group) {
                 if (group.isEmpty()) {
-                    this.ingredients[i] = RecipeComponent.EMPTY;
+                    this.inputs[i] = RecipeComponent.EMPTY;
                 }
 
                 if (group.stream().findAny().get() instanceof ItemStack) {
-                    this.ingredients[i] = new GroupRecipeComponent((Set<ItemStack>) group);
+                    this.inputs[i] = new GroupRecipeComponent((Set<ItemStack>) group);
                 }
             }
         }
@@ -64,44 +64,64 @@ public class RecipeBuilder {
         return this;
     }
 
-    public RecipeBuilder ingredients(RecipeComponent<?>... ingredients) {
-        this.ingredients = ingredients;
+    public RecipeBuilder inputs(RecipeComponent<?>... inputs) {
+        this.inputs = inputs;
         return this;
     }
 
-    public RecipeBuilder ingredients(ItemStack... ingredients) {
-        return ingredients(Arrays.stream(ingredients)
-                .map(ingredient -> ingredient == null ? null : new SingleRecipeComponent(ingredient))
+    public RecipeBuilder inputs(ItemStack... inputs) {
+        return inputs(Arrays.stream(inputs)
+                .map(input -> input == null 
+                    ? RecipeComponent.EMPTY
+                    : new SingleRecipeComponent(input))
                 .toArray(RecipeComponent<?>[]::new));
     }
 
-    public RecipeBuilder ingredients(Material... ingredients) {
-        return ingredients(Arrays.stream(ingredients)
-                .map(ingredient -> ingredient == null ? null : new SingleRecipeComponent(new ItemStack(ingredient)))
+    public RecipeBuilder inputs(Material... inputs) {
+        return inputs(Arrays.stream(inputs)
+                .map(input -> input == null
+                    ? RecipeComponent.EMPTY
+                    : new SingleRecipeComponent(new ItemStack(input)))
                 .toArray(RecipeComponent<?>[]::new));
     }
 
-    public RecipeBuilder output(RecipeOutput outputs) {
+    public RecipeBuilder outputs(RecipeOutput outputs) {
         this.output = outputs;
         return this;
     }
 
-    public RecipeBuilder output(ItemStack... outputs) {
+    public RecipeBuilder outputs(ItemStack... outputs) {
         this.output = new ItemRecipeOutput(outputs);
         return this;
     }
 
-    public RecipeBuilder output(LootTable<ItemStack> outputs) {
+    public RecipeBuilder output(ItemStack output, int amount) {
+        final ItemStack newOutput = output.clone();
+        newOutput.setAmount(amount);
+        this.output = new ItemRecipeOutput(newOutput);
+        return this;
+    }
+
+    public RecipeBuilder output(Material output, int amount) {
+        this.output = new ItemRecipeOutput(new ItemStack(output, amount));
+        return this;
+    }
+
+    public RecipeBuilder output(Material output) {
+        return output(output, 1);
+    }
+
+    public RecipeBuilder outputs(LootTable<ItemStack> outputs) {
         this.output = new WeightedRecipeOutput(outputs);
         return this;
     }
 
     public Recipe build() {
-        return new Recipe(ingredientsProducer.apply(ingredients, shape), output);
+        return new Recipe(inputsProducer.apply(inputs, shape), output);
     }
 
     public Recipe register() {
-        final Recipe recipe = new Recipe(ingredientsProducer.apply(ingredients, shape), output);
+        final Recipe recipe = new Recipe(inputsProducer.apply(inputs, shape), output);
         Recipe.registerRecipes(type, recipe);
         return recipe;
     }

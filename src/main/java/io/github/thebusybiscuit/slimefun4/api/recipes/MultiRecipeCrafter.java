@@ -27,37 +27,37 @@ public interface MultiRecipeCrafter {
     public default boolean canCraft(@Nonnull Recipe recipe) { return true; }
 
     public default @Nullable ItemStack[] attemptCraft(
-        @Nonnull ItemStack[] ingredients,
-        boolean consumeIngredients,
+        @Nonnull ItemStack[] inputs,
+        boolean consumeInputs,
         boolean cache,
         int hash
     ) {
         for (final RecipeType recipeType : getRecipeTypes()) {
-            final RecipeSearchResult result = Recipe.searchRecipes(recipeType, ingredients, this::canCraft, consumeIngredients, cache, hash);   
+            final RecipeSearchResult result = Recipe.searchRecipes(recipeType, inputs, this::canCraft, consumeInputs, cache, hash);   
             if (result.recipeExists()) return result.getRecipe().getOutputs();
         }
         return null;
     }
 
     public default @Nullable ItemStack[] attemptCraft(
-        @Nonnull ItemStack[] ingredients,
-        boolean consumeIngredients,
+        @Nonnull ItemStack[] inputs,
+        boolean consumeInputs,
         int hash
     ) {
-        return attemptCraft(ingredients, consumeIngredients, true, hash);
+        return attemptCraft(inputs, consumeInputs, true, hash);
     }
     
-    public default @Nullable ItemStack[] attemptCraft(@Nonnull ItemStack[] ingredients, boolean consumeIngredients) {
+    public default @Nullable ItemStack[] attemptCraft(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
         int hash = 1;
-        for (ItemStack item : ingredients) {
+        for (ItemStack item : inputs) {
             hash = hash * 31 + (item == null ? 0 : item.hashCode());
         }
 
-        return attemptCraft(ingredients, consumeIngredients, hash);
+        return attemptCraft(inputs, consumeInputs, hash);
     }
 
-    public default @Nullable ItemStack[] attemptCraft(@Nonnull ItemStack[] ingredients) {
-        return attemptCraft(ingredients, true);
+    public default @Nullable ItemStack[] attemptCraft(@Nonnull ItemStack[] inputs) {
+        return attemptCraft(inputs, true);
     }
     
 }

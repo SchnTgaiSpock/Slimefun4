@@ -15,67 +15,85 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.components.RecipeComponent
 import io.github.thebusybiscuit.slimefun4.utils.RecipeUtils;
 import io.github.thebusybiscuit.slimefun4.utils.RecipeUtils.StripResult;
 
-public class CraftingGrid extends RecipeIngredients {
+/**
+ * A recipe input for a 3x3 crafting grid.
+ * 
+ * @apiNote Implementations for larger sized grids need only override:
+ * <ul>
+ * <li>CraftingGrid(inputs, shape)
+ * <li>matchTranslated(inputs, consumeInputs)
+ */
+public class CraftingGrid extends RecipeInputs {
 
-    private final RecipeComponent<?>[] ingredients;
+    private final RecipeComponent<?>[] inputs;
     private final int width;
     private final int height;
     private final RecipeShape shape;
+    private final boolean singleItem;
 
-    public CraftingGrid(RecipeComponent<?>[] ingredients, RecipeShape shape) {
+    public CraftingGrid(RecipeComponent<?>[] inputs, int height, int width, RecipeShape shape) {
         this.shape = shape;
         switch (shape) {
             case IDENTICAL:
-                this.ingredients = ingredients;
-                height = 3;
-                width = 3;
+                this.inputs = inputs;
+                this.height = height;
+                this.width = width;
                 break;
 
             case TRANSLATED:
                 final var result = RecipeUtils.strip(
-                        ingredients,
-                        3, 3,
+                        inputs,
+                        width, height,
                         comp -> comp == null || comp.isEmpty());
-                this.ingredients = result.getResult().toArray(RecipeComponent<?>[]::new);
-                width = result.getStrippedWidth();
-                height = result.getStrippedHeight();
+                this.inputs = result.getResult().toArray(RecipeComponent<?>[]::new);
+                this.width = result.getStrippedWidth();
+                this.height = result.getStrippedHeight();
                 break;
 
             default:
-                this.ingredients = Arrays
-                        .stream(ingredients)
+                this.inputs = Arrays
+                        .stream(inputs)
                         .filter(comp -> comp == null || comp.isEmpty())
                         .toArray(RecipeComponent<?>[]::new);
-                height = 0;
-                width = 0;
+                this.height = this.inputs.length;
+                this.width = 1;
                 break;
         }
+        this.singleItem = Arrays.stream(inputs).reduce(
+            0,
+            (count, item) -> count += (item.isEmpty() ? 0 : 1),
+            Integer::sum
+        ) == 1;
+    }
+
+    public CraftingGrid(RecipeComponent<?>[] inputs, RecipeShape shape) {
+        this(inputs, 3, 3, shape);
     }
 
     @Override
-    public boolean matches(@Nonnull ItemStack[] ingredients, boolean consumeIngredients) {
+    public boolean matches(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
         return switch (shape) {
-            case IDENTICAL -> matchIdentical(ingredients, consumeIngredients);
-            case TRANSLATED -> matchTranslated(ingredients, consumeIngredients);
-            case SHUFFLED -> matchShuffled(ingredients, consumeIngredients);
-            case CONTAINING -> matchContaining(ingredients, consumeIngredients);
+            case IDENTICAL -> matchIdentical(inputs, consumeInputs);
+            case TRANSLATED -> matchTranslated(inputs, consumeInputs);
+            case SHUFFLED -> matchShuffled(inputs, consumeInputs);
+            case CONTAINING -> matchContaining(inputs, consumeInputs);
             default -> false;
         };
     }
 
-    public boolean matchIdentical(@Nonnull ItemStack[] ingredients, boolean consumeIngredients) {
-        if (ingredients.length != width * height) {
+    public boolean matchIdentical(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+        if (inputs.length != width * height) {
             return false;
         }
 
-        for (int i = 0; i < ingredients.length; i++) {
-            if (!this.ingredients[i].matches(ingredients[i])) {
+        for (int i = 0; i < inputs.length; i++) {
+            if (!this.inputs[i].matches(inputs[i])) {
                 return false;
             }
         }
 
-        if (consumeIngredients) {
-            for (ItemStack item : ingredients) {
+        if (consumeInputs) {
+            for (final ItemStack item : inputs) {
                 if (item != null) {
                     item.setAmount(item.getAmount() - 1);
                 }
@@ -85,48 +103,48 @@ public class CraftingGrid extends RecipeIngredients {
         return true;
     }
 
-    public boolean matchTranslated(@Nonnull ItemStack[] ingredients, boolean consumeIngredients) {
-        if (ingredients.length != 9) {
+    public boolean matchTranslated(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+        if (inputs.length != 9) {
             return false;
         }
 
         final StripResult<ItemStack> result = RecipeUtils.strip(
-                ingredients,
+                inputs,
                 3, 3,
                 item -> item == null || item.getType() == Material.AIR);
         final ItemStack[] reduced = result.getResult().toArray(ItemStack[]::new);
 
-        return matchIdentical(reduced, consumeIngredients);
+        return matchIdentical(reduced, consumeInputs);
     }
 
-    public boolean matchShuffled(@Nonnull ItemStack[] ingredients, boolean consumeIngredients) {
-        final ItemStack[] givenIngredients = Arrays
-                .stream(ingredients)
-                .filter(ingredient -> ingredient == null || ingredient.getType() == Material.AIR)
+    public boolean matchShuffled(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+        final ItemStack[] givenInputs = Arrays
+                .stream(inputs)
+                .filter(input -> input == null || input.getType() == Material.AIR)
                 .toArray(ItemStack[]::new);
 
-        if (givenIngredients.length != this.ingredients.length) {
+        if (givenInputs.length != this.inputs.length) {
             return false;
         }
 
-        final Set<Integer> recipeIngredientsMatched = new HashSet<>();
+        final Set<Integer> recipeInputsMatched = new HashSet<>();
 
-        for (ItemStack givenIngredient : givenIngredients) {
-            for (int i = 0; i < this.ingredients.length; i++) {
-                if (recipeIngredientsMatched.contains(i)) {
+        for (final ItemStack givenInput : givenInputs) {
+            for (int i = 0; i < this.inputs.length; i++) {
+                if (recipeInputsMatched.contains(i)) {
                     continue;
                 }
 
-                if (this.ingredients[i].matches(givenIngredient)) {
-                    recipeIngredientsMatched.add(i);
+                if (this.inputs[i].matches(givenInput)) {
+                    recipeInputsMatched.add(i);
                 }
             }
         }
 
-        final boolean matched = recipeIngredientsMatched.size() == this.ingredients.length;
+        final boolean matched = recipeInputsMatched.size() == this.inputs.length;
 
-        if (matched && consumeIngredients) {
-            for (ItemStack item : givenIngredients) {
+        if (matched && consumeInputs) {
+            for (ItemStack item : givenInputs) {
                 item.setAmount(item.getAmount());
             }
         }
@@ -134,37 +152,37 @@ public class CraftingGrid extends RecipeIngredients {
         return matched;
     }
 
-    public boolean matchContaining(@Nonnull ItemStack[] ingredients, boolean consumeIngredients) {
-        final ItemStack[] givenIngredients = Arrays
-                .stream(ingredients)
-                .filter(ingredient -> ingredient == null || ingredient.getType() == Material.AIR)
+    public boolean matchContaining(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+        final ItemStack[] givenInputs = Arrays
+                .stream(inputs)
+                .filter(input -> input == null || input.getType() == Material.AIR)
                 .toArray(ItemStack[]::new);
 
-        if (givenIngredients.length < this.ingredients.length) {
+        if (givenInputs.length < this.inputs.length) {
             return false;
         }
 
-        final Set<Integer> givenIngredientsMatched = new HashSet<>();
-        final Set<Integer> recipeIngredientsMatched = new HashSet<>();
+        final Set<Integer> givenInputsMatched = new HashSet<>();
+        final Set<Integer> recipeInputsMatched = new HashSet<>();
 
-        for (int i = 0; i < givenIngredients.length; i++) {
-            for (int j = 0; j < this.ingredients.length; j++) {
-                if (recipeIngredientsMatched.contains(j)) {
+        for (int i = 0; i < givenInputs.length; i++) {
+            for (int j = 0; j < this.inputs.length; j++) {
+                if (recipeInputsMatched.contains(j)) {
                     continue;
                 }
 
-                if (this.ingredients[j].matches(givenIngredients[i])) {
-                    givenIngredientsMatched.add(i);
-                    recipeIngredientsMatched.add(j);
+                if (this.inputs[j].matches(givenInputs[i])) {
+                    givenInputsMatched.add(i);
+                    recipeInputsMatched.add(j);
                 }
             }
         }
 
-        final boolean matched = recipeIngredientsMatched.size() == this.ingredients.length;
+        final boolean matched = recipeInputsMatched.size() == this.inputs.length;
 
-        if (matched && consumeIngredients) {
-            givenIngredientsMatched.stream().forEach(i -> {
-                final ItemStack item = givenIngredients[i];
+        if (matched && consumeInputs) {
+            givenInputsMatched.stream().forEach(i -> {
+                final ItemStack item = givenInputs[i];
                 item.setAmount(item.getAmount() - 1);
             });
         }
@@ -172,8 +190,8 @@ public class CraftingGrid extends RecipeIngredients {
         return matched;
     }
 
-    public RecipeComponent<?>[] getIngredients() {
-        return ingredients;
+    public RecipeComponent<?>[] getInputs() {
+        return inputs;
     }
 
     public int getWidth() {
@@ -190,7 +208,7 @@ public class CraftingGrid extends RecipeIngredients {
 
     @Override
     public ItemStack[] getGuideRecipe() {
-        return Arrays.stream(getIngredients())
+        return Arrays.stream(getInputs())
                 .map(comp -> comp == null ? null : comp.getDisplayItem())
                 .toArray(ItemStack[]::new);
     }
@@ -198,6 +216,21 @@ public class CraftingGrid extends RecipeIngredients {
     @Override
     public List<ItemStack> getGuideBottomRows() {
         return List.of();
+    }
+
+    public boolean isSingleItem() {
+        return singleItem;
+    }
+
+    public MachineInputs toMachineInput() {
+        final RecipeComponent<?>[] filteredInputs = Arrays.stream(inputs)
+            .filter(item -> item.isEmpty()).toArray(RecipeComponent<?>[]::new);
+
+        return switch (filteredInputs.length) {
+            case 1 -> new MachineInputs(inputs[0]);
+            case 2 -> new MachineInputs(inputs[0], inputs[1]);
+            default -> throw new IllegalStateException("Cannot convert this input into a MachineInput because it does not have only 1 or 2 items");
+        };
     }
 
 }

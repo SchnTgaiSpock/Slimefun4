@@ -8,6 +8,11 @@ import org.bukkit.inventory.ItemStack;
 
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 
+/**
+ * A component (input) in a recipe. Matchines a single itemstack
+ * 
+ * @author SchnTgaiSpock
+ */
 public class SingleRecipeComponent implements RecipeComponent<ItemStack> {
 
     private final ItemStack component;
@@ -26,6 +31,7 @@ public class SingleRecipeComponent implements RecipeComponent<ItemStack> {
         return component.getType() == Material.AIR;
     }
 
+    @Nonnull
     @Override
     public ItemStack getDisplayItem() {
         return component.clone();
@@ -36,6 +42,7 @@ public class SingleRecipeComponent implements RecipeComponent<ItemStack> {
         return "SingleRecipeComponent(" + getComponent().toString() + ")";
     }
 
+    @Nonnull
     public ItemStack getComponent() {
         return component;
     }

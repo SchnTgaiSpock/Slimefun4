@@ -6,7 +6,7 @@ public class ItemRecipeOutput implements RecipeOutput {
 
     private final ItemStack[] outputs;
 
-    public ItemRecipeOutput(ItemStack[] outputs) {
+    public ItemRecipeOutput(ItemStack... outputs) {
         this.outputs = new ItemStack[outputs.length];
         for (int i = 0; i < outputs.length; i++) {
             this.outputs[i] = outputs[i].clone();
@@ -16,6 +16,11 @@ public class ItemRecipeOutput implements RecipeOutput {
     @Override
     public ItemStack[] getOutputs() {
         return outputs;
+    }
+
+    @Override
+    public boolean isSingleItem() {
+        return outputs.length == 1;
     }
     
 }

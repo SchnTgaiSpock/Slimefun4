@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.google.common.base.Predicate;
 
-import io.github.thebusybiscuit.slimefun4.api.recipes.inputs.RecipeIngredients;
+import io.github.thebusybiscuit.slimefun4.api.recipes.inputs.RecipeInputs;
 import io.github.thebusybiscuit.slimefun4.api.recipes.outputs.RecipeOutput;
 
 /**
@@ -84,16 +84,16 @@ public class Recipe {
         };
     }; // TODO: Only cache when can craft more than 1 of the recipe
 
-    final RecipeIngredients ingredients;
+    final RecipeInputs inputs;
     final RecipeOutput outputs;
 
-    public Recipe(RecipeIngredients ingredients, RecipeOutput outputs) {
-        this.ingredients = ingredients;
+    public Recipe(RecipeInputs inputs, RecipeOutput outputs) {
+        this.inputs = inputs;
         this.outputs = outputs;
     }
 
-    public boolean matches(@Nonnull ItemStack[] ingredients, boolean consumeIngredients) {
-        return this.ingredients.matches(ingredients, consumeIngredients);
+    public boolean matches(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+        return this.inputs.matches(inputs, consumeInputs);
     }
 
     public ItemStack[] getOutputs() {
@@ -101,11 +101,19 @@ public class Recipe {
     }
 
     public ItemStack[] getGuideRecipe() {
-        return ingredients.getGuideRecipe();
+        return inputs.getGuideRecipe();
     }
 
     public List<ItemStack> getGuideBottomRows() {
-        return ingredients.getGuideBottomRows();
+        return inputs.getGuideBottomRows();
+    }
+
+    public List<ItemStack> getAsBottomRowRecipe() {
+        if (inputs.isSingleItem() && outputs.isSingleItem()) {
+            return List.of(inputs.getGuideRecipe()[0], outputs.getOutputs()[0]);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public static Map<RecipeType, List<Recipe>> getRecipes() {
@@ -117,25 +125,25 @@ public class Recipe {
     }
 
     /**
-     * Searches recipes for a given ingredient array
+     * Searches recipes for a given input array
      * @param type The type of recipe to search for
-     * @param ingredients The ingredients that are being searched on
+     * @param inputs The inputs that are being searched on
      * @param canCraft A predicate taking a recipe, and returning if it
      * is able to be crafted. This should be used when extending {@code Recipe}
      * and imposing new resources
-     * @param consumeIngredients Whether or not to consume the ingredients if a
+     * @param consumeInputs Whether or not to consume the inputs if a
      * valid recipe was found and is able to be crafted
      * @param cache Save the recipe to the LRU cache if the recipe can be crafted
-     * multiple times from the given ingredients
-     * @param hash The hash of the ingredients to be used when cacheing
+     * multiple times from the given inputs
+     * @param hash The hash of the inputs to be used when cacheing
      * @return The result of the search
      */
     @ParametersAreNonnullByDefault
     public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type,
-        ItemStack[] ingredients,
+        ItemStack[] inputs,
         @Nullable Predicate<Recipe> canCraft,
-        boolean consumeIngredients,
+        boolean consumeInputs,
         boolean cache,
         int hash
     ) {
@@ -144,14 +152,14 @@ public class Recipe {
             return new RecipeSearchResult(recipe, canCraft != null && canCraft.test(recipe), true);
         }
 
-        final boolean canOnlyCraft1 = Arrays.stream(ingredients).anyMatch(s -> s.getAmount() == 1);
+        final boolean canOnlyCraft1 = Arrays.stream(inputs).anyMatch(s -> s.getAmount() == 1);
 
         for (final Recipe recipe : recipes.get(type)) {
             final boolean craftable = canCraft != null && canCraft.test(recipe);
             if (!craftable) {
                 continue;
             }
-            if (recipe.matches(ingredients, consumeIngredients)) {
+            if (recipe.matches(inputs, consumeInputs)) {
                 if (cache && !canOnlyCraft1) {
                     recentlyUsed.put(hash, recipe);
                 }
@@ -162,41 +170,56 @@ public class Recipe {
         return new RecipeSearchResult(null, false, false);
     }
 
+    public static @Nonnull List<Recipe> getRecipes(RecipeType recipeType) {
+        return Collections.unmodifiableList(recipes.getOrDefault(recipeType, Collections.emptyList()));
+    }
+
     @ParametersAreNonnullByDefault
     public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type,
-        ItemStack[] ingredients,
+        ItemStack[] inputs,
         @Nullable Predicate<Recipe> canCraft,
-        boolean consumeIngredients
+        boolean consumeInputs
     ) {
         int hash = 1;
-        for (ItemStack item : ingredients) {
+        for (ItemStack item : inputs) {
             hash = hash * 31 + (item == null ? 0 : item.hashCode());
         }
 
-        return searchRecipes(type, ingredients, canCraft, consumeIngredients, true, hash);
+        return searchRecipes(type, inputs, canCraft, consumeInputs, true, hash);
     }
 
     @ParametersAreNonnullByDefault
     public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type, 
-        ItemStack[] ingredients,
+        ItemStack[] inputs,
         @Nullable Predicate<Recipe> canCraft
     ) {
-        return searchRecipes(type, ingredients, canCraft, true);
+        return searchRecipes(type, inputs, canCraft, true);
     }
 
     @ParametersAreNonnullByDefault
     public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type, 
-        ItemStack[] ingredients
+        ItemStack[] inputs
     ) {
-        return searchRecipes(type, ingredients, null);
+        return searchRecipes(type, inputs, null);
     }
 
-    @SafeVarargs
     public static void registerRecipes(RecipeType recipeType, Recipe... recipes) {
-        for (Recipe recipe : recipes) {
+        for (final Recipe recipe : recipes) {
+            if (Recipe.recipes.containsKey(recipeType)) {
+                Recipe.recipes.get(recipeType).add(recipe);
+            } else {
+                final List<Recipe> newList = new ArrayList<>();
+                newList.add(recipe);
+                Recipe.recipes.put(recipeType, newList);
+            }
+        }
+    }
+
+    public static void registerRecipe(RecipeType recipeType, ItemStack[] inputs, ItemStack[] outputs) {
+        final Recipe recipe = new RecipeBuilder().inputs(inputs).outputs(outputs).build();
         if (Recipe.recipes.containsKey(recipeType)) {
             Recipe.recipes.get(recipeType).add(recipe);
         } else {
@@ -204,7 +227,10 @@ public class Recipe {
             newList.add(recipe);
             Recipe.recipes.put(recipeType, newList);
         }
-        }
+    }
+
+    public static void registerRecipe(RecipeType recipeType, ItemStack input, ItemStack output) {
+        registerRecipe(recipeType, new ItemStack[] { input }, new ItemStack[] { output });
     }
 
 }

@@ -8,6 +8,11 @@ import org.bukkit.inventory.ItemStack;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 
+/**
+ * A component (input) in a recipe. Matches all items in its tag.
+ * 
+ * @author SchnTgaiSpock
+ */
 public class TagRecipeComponent implements RecipeComponent<SlimefunTag> {
 
     private final SlimefunTag component;
@@ -29,6 +34,7 @@ public class TagRecipeComponent implements RecipeComponent<SlimefunTag> {
         return component.isEmpty();
     }
 
+    @Nonnull
     @Override
     public ItemStack getDisplayItem() {
         if (isEmpty()) return null;
@@ -40,6 +46,7 @@ public class TagRecipeComponent implements RecipeComponent<SlimefunTag> {
         return "TagRecipeComponent(" + getComponent().toString() + ")";
     }
 
+    @Nonnull
     public SlimefunTag getComponent() {
         return component;
     }

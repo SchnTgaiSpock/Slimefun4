@@ -27,6 +27,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemSpawnReason;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeCrafter;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.NotPlaceable;
 import io.github.thebusybiscuit.slimefun4.core.attributes.RecipeDisplayItem;
@@ -44,7 +45,7 @@ import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
  * @see MultiBlock
  *
  */
-public abstract class MultiBlockMachine extends SlimefunItem implements NotPlaceable, RecipeDisplayItem {
+public abstract class MultiBlockMachine extends SlimefunItem implements NotPlaceable, RecipeDisplayItem, RecipeCrafter {
 
     protected final List<ItemStack[]> recipes;
     protected final List<ItemStack> displayRecipes;
@@ -68,10 +69,6 @@ public abstract class MultiBlockMachine extends SlimefunItem implements NotPlace
 
     protected void registerDefaultRecipes(@Nonnull List<ItemStack> recipes) {
         // Override this method to register some default recipes
-    }
-
-    public @Nonnull List<ItemStack[]> getRecipes() {
-        return recipes;
     }
 
     @Override

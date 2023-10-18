@@ -9,6 +9,11 @@ import org.bukkit.inventory.ItemStack;
 
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 
+/**
+ * A component (input) in a recipe. It matches any one of its items
+ * 
+ * @author SchnTgaiSpock
+ */
 public class GroupRecipeComponent implements RecipeComponent<Set<ItemStack>> {
 
     private final Set<ItemStack> component;
@@ -27,6 +32,7 @@ public class GroupRecipeComponent implements RecipeComponent<Set<ItemStack>> {
         return component.isEmpty();
     }
 
+    @Nonnull
     @Override
     public ItemStack getDisplayItem() {
         if (isEmpty()) return null;
@@ -38,6 +44,7 @@ public class GroupRecipeComponent implements RecipeComponent<Set<ItemStack>> {
         return "GroupRecipeComponent(" + getComponent().toString() + ")";
     }
 
+    @Nonnull
     public Set<ItemStack> getComponent() {
         return component;
     }
