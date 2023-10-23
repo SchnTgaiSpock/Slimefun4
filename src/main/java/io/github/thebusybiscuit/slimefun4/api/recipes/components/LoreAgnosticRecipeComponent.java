@@ -21,7 +21,7 @@ public class LoreAgnosticRecipeComponent extends SingleRecipeComponent {
 
     @Override
     public boolean matches(@Nullable ItemStack item) {
-        return SlimefunUtils.isItemSimilar(getComponent(), item, false);
+        return SlimefunUtils.isItemSimilar(item, getComponent(), false);
     }
 
     @Override

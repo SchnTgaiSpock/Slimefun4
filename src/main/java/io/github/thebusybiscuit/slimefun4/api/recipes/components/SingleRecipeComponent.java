@@ -22,8 +22,13 @@ public class SingleRecipeComponent implements RecipeComponent<ItemStack> {
     }
 
     @Override
+    public int getAmount() {
+        return component.getAmount();
+    }
+
+    @Override
     public boolean matches(@Nullable ItemStack item) {
-        return SlimefunUtils.isItemSimilar(component, item, true);
+        return SlimefunUtils.isItemSimilar(item, component, true);
     }
 
     @Override

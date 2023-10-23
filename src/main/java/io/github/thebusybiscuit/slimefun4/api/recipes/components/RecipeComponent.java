@@ -24,6 +24,8 @@ public interface RecipeComponent<T> {
 
     public @Nonnull T getComponent();
 
+    public int getAmount();
+
     /**
      * Determines if the given item can be used as this component in a recipe.
      * @param item The item to match
@@ -50,8 +52,8 @@ public interface RecipeComponent<T> {
     }
 
     @Nonnull 
-    public static TagRecipeComponent of(@Nonnull SlimefunTag tag) {
-        return new TagRecipeComponent(tag);
+    public static TagRecipeComponent of(@Nonnull SlimefunTag tag, int amount) {
+        return new TagRecipeComponent(tag, amount);
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import io.github.bakedlibs.dough.collections.RandomizedSet;
 import io.github.thebusybiscuit.slimefun4.api.recipes.components.GroupRecipeComponent;
 import io.github.thebusybiscuit.slimefun4.api.recipes.components.RecipeComponent;
 import io.github.thebusybiscuit.slimefun4.api.recipes.components.SingleRecipeComponent;
@@ -49,7 +50,7 @@ public class RecipeBuilder {
             } else if (input instanceof final Material mat) {
                 this.inputs[i] = new SingleRecipeComponent(new ItemStack(mat));
             } else if (input instanceof final SlimefunTag tag) {
-                this.inputs[i] = new TagRecipeComponent(tag);
+                this.inputs[i] = new TagRecipeComponent(tag, 1);
             } else if (input instanceof final Set<?> group) {
                 if (group.isEmpty()) {
                     this.inputs[i] = RecipeComponent.EMPTY;
@@ -58,6 +59,8 @@ public class RecipeBuilder {
                 if (group.stream().findAny().get() instanceof ItemStack) {
                     this.inputs[i] = new GroupRecipeComponent((Set<ItemStack>) group);
                 }
+            } else if (input instanceof final RecipeComponent<?> component) {
+                this.inputs[i] = component;
             }
         }
 
@@ -111,7 +114,7 @@ public class RecipeBuilder {
         return output(output, 1);
     }
 
-    public RecipeBuilder outputs(LootTable<ItemStack> outputs) {
+    public RecipeBuilder outputs(RandomizedSet<ItemStack> outputs) {
         this.output = new WeightedRecipeOutput(outputs);
         return this;
     }

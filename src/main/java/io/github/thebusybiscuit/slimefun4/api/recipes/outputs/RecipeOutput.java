@@ -14,9 +14,15 @@ public interface RecipeOutput {
         public boolean isSingleItem() {
             return false;
         }
+
+        @Override
+        public boolean checkEnabled() {
+            return true;
+        }
     };
     
     public ItemStack[] getOutputs();
     public boolean isSingleItem();
+    public boolean checkEnabled();
 
 }

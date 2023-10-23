@@ -1,15 +1,17 @@
 package io.github.thebusybiscuit.slimefun4.api.recipes.inputs;
 
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import io.github.bakedlibs.dough.items.ItemUtils;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeShape;
 import io.github.thebusybiscuit.slimefun4.api.recipes.components.RecipeComponent;
 import io.github.thebusybiscuit.slimefun4.utils.RecipeUtils;
@@ -71,17 +73,17 @@ public class CraftingGrid extends RecipeInputs {
     }
 
     @Override
-    public boolean matches(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+    public boolean matches(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
         return switch (shape) {
-            case IDENTICAL -> matchIdentical(inputs, consumeInputs);
-            case TRANSLATED -> matchTranslated(inputs, consumeInputs);
-            case SHUFFLED -> matchShuffled(inputs, consumeInputs);
-            case CONTAINING -> matchContaining(inputs, consumeInputs);
+            case IDENTICAL -> matchIdentical(inputs, canCraft, consumeInputs);
+            case TRANSLATED -> matchTranslated(inputs, canCraft, consumeInputs);
+            case SHUFFLED -> matchShuffled(inputs, canCraft, consumeInputs);
+            case SUBSET -> matchSubset(inputs, canCraft, consumeInputs);
             default -> false;
         };
     }
 
-    public boolean matchIdentical(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+    public boolean matchIdentical(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
         if (inputs.length != width * height) {
             return false;
         }
@@ -103,7 +105,7 @@ public class CraftingGrid extends RecipeInputs {
         return true;
     }
 
-    public boolean matchTranslated(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+    public boolean matchTranslated(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
         if (inputs.length != 9) {
             return false;
         }
@@ -114,10 +116,10 @@ public class CraftingGrid extends RecipeInputs {
                 item -> item == null || item.getType() == Material.AIR);
         final ItemStack[] reduced = result.getResult().toArray(ItemStack[]::new);
 
-        return matchIdentical(reduced, consumeInputs);
+        return matchIdentical(reduced, canCraft, consumeInputs);
     }
 
-    public boolean matchShuffled(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+    public boolean matchShuffled(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
         final ItemStack[] givenInputs = Arrays
                 .stream(inputs)
                 .filter(input -> input == null || input.getType() == Material.AIR)
@@ -127,32 +129,10 @@ public class CraftingGrid extends RecipeInputs {
             return false;
         }
 
-        final Set<Integer> recipeInputsMatched = new HashSet<>();
-
-        for (final ItemStack givenInput : givenInputs) {
-            for (int i = 0; i < this.inputs.length; i++) {
-                if (recipeInputsMatched.contains(i)) {
-                    continue;
-                }
-
-                if (this.inputs[i].matches(givenInput)) {
-                    recipeInputsMatched.add(i);
-                }
-            }
-        }
-
-        final boolean matched = recipeInputsMatched.size() == this.inputs.length;
-
-        if (matched && consumeInputs) {
-            for (ItemStack item : givenInputs) {
-                item.setAmount(item.getAmount());
-            }
-        }
-
-        return matched;
+        return matchShapeless(givenInputs, canCraft, consumeInputs);
     }
 
-    public boolean matchContaining(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
+    public boolean matchSubset(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
         final ItemStack[] givenInputs = Arrays
                 .stream(inputs)
                 .filter(input -> input == null || input.getType() == Material.AIR)
@@ -162,28 +142,35 @@ public class CraftingGrid extends RecipeInputs {
             return false;
         }
 
-        final Set<Integer> givenInputsMatched = new HashSet<>();
-        final Set<Integer> recipeInputsMatched = new HashSet<>();
+        return matchShapeless(givenInputs, canCraft, consumeInputs);
+    }
 
-        for (int i = 0; i < givenInputs.length; i++) {
-            for (int j = 0; j < this.inputs.length; j++) {
-                if (recipeInputsMatched.contains(j)) {
+    private boolean matchShapeless(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
+        final Map<Integer, Integer> givenInputsMatched = new HashMap<>();
+
+        componentLoop: for (final RecipeComponent<?> input : this.inputs) {
+            for (int i = 0; i < inputs.length; i++) {
+                if (givenInputsMatched.containsKey(i)) {
+                    // inputs[i] has already been taken by another component
                     continue;
                 }
 
-                if (this.inputs[j].matches(givenInputs[i])) {
-                    givenInputsMatched.add(i);
-                    recipeInputsMatched.add(j);
+                if (input.matches(inputs[i])) {
+                    givenInputsMatched.put(i, input.getAmount());
+                    continue componentLoop;
                 }
             }
+            
+            // The loop will only reach here if the component
+            // did not match anything in the given inputs
+            return false;
         }
 
-        final boolean matched = recipeInputsMatched.size() == this.inputs.length;
+        final boolean matched = givenInputsMatched.size() == this.inputs.length;
 
-        if (matched && consumeInputs) {
-            givenInputsMatched.stream().forEach(i -> {
-                final ItemStack item = givenInputs[i];
-                item.setAmount(item.getAmount() - 1);
+        if (matched && consumeInputs && canCraft.get()) {
+            givenInputsMatched.entrySet().stream().forEach(entry -> {
+                ItemUtils.consumeItem(inputs[entry.getKey()], entry.getValue(), true);
             });
         }
 

@@ -6,17 +6,18 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import io.github.thebusybiscuit.slimefun4.api.recipes.Recipe.RecipeSearchResult;
 
 public interface RecipeCrafter {
 
-    public @Nonnull RecipeType getRecipeType();
+    public @Nonnull RecipeType getCraftedRecipeType();
 
     public default List<Recipe> getRecipes() {
-        return Recipe.getRecipes().containsKey(getRecipeType()) 
-            ? Recipe.getRecipes().get(getRecipeType()) 
+        return Recipe.getRecipes().containsKey(getCraftedRecipeType()) 
+            ? Recipe.getRecipes().get(getCraftedRecipeType()) 
             : Collections.emptyList();
     }
 
@@ -28,7 +29,7 @@ public interface RecipeCrafter {
         boolean cache,
         int hash
     ) {
-        final RecipeSearchResult result = Recipe.searchRecipes(getRecipeType(), inputs, this::canCraft, consumeInputs, cache, hash);
+        final RecipeSearchResult result = Recipe.searchRecipes(getCraftedRecipeType(), inputs, this::canCraft, consumeInputs, cache, hash);
         return result.recipeExists() ? result.getRecipe().getOutputs() : null;
     }
 
@@ -47,6 +48,11 @@ public interface RecipeCrafter {
         }
 
         return attemptCraft(inputs, consumeInputs, hash);
+    }
+    
+    public default @Nullable ItemStack[] attemptCraft(@Nonnull ItemStack[] inputs, boolean consumeInputs, Player crafter, boolean sendMessage) {
+        final RecipeSearchResult result = Recipe.searchRecipes(getCraftedRecipeType(), inputs, consumeInputs, crafter, sendMessage);
+        return result.recipeExists() ? result.getRecipe().getOutputs() : null;
     }
 
     public default @Nullable ItemStack[] attemptCraft(@Nonnull ItemStack[] inputs) {

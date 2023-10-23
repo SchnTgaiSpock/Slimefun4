@@ -16,14 +16,21 @@ import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 public class TagRecipeComponent implements RecipeComponent<SlimefunTag> {
 
     private final SlimefunTag component;
+    private final int amount;
 
-    public TagRecipeComponent(@Nonnull SlimefunTag component) {
+    public TagRecipeComponent(@Nonnull SlimefunTag component, int amount) {
         this.component = component;
+        this.amount = amount;
+    }
+
+    @Override
+    public int getAmount() {
+        return amount;
     }
 
     @Override
     public boolean matches(@Nullable ItemStack item) {
-        if (!SlimefunUtils.isItemSimilar(new ItemStack(item.getType()), item, true)) {
+        if (!SlimefunUtils.isItemSimilar(item, new ItemStack(item.getType(), getAmount()), true)) {
             return false;
         }
         return component.isTagged(item.getType());

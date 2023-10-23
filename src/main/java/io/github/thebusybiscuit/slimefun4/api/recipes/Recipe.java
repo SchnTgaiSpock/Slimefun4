@@ -7,17 +7,20 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.base.Predicate;
 
 import io.github.thebusybiscuit.slimefun4.api.recipes.inputs.RecipeInputs;
 import io.github.thebusybiscuit.slimefun4.api.recipes.outputs.RecipeOutput;
+import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 
 /**
  * Holds all item recipes. 
@@ -92,8 +95,8 @@ public class Recipe {
         this.outputs = outputs;
     }
 
-    public boolean matches(@Nonnull ItemStack[] inputs, boolean consumeInputs) {
-        return this.inputs.matches(inputs, consumeInputs);
+    public boolean matches(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
+        return this.inputs.matches(inputs, canCraft, consumeInputs);
     }
 
     public ItemStack[] getOutputs() {
@@ -114,6 +117,10 @@ public class Recipe {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    public boolean canCraft(Player crafter, boolean sendMessage) {
+        return !outputs.isSingleItem() || SlimefunUtils.canPlayerUseItem(crafter, getOutputs()[0], sendMessage);
     }
 
     public static Map<RecipeType, List<Recipe>> getRecipes() {
@@ -152,18 +159,15 @@ public class Recipe {
             return new RecipeSearchResult(recipe, canCraft != null && canCraft.test(recipe), true);
         }
 
-        final boolean canOnlyCraft1 = Arrays.stream(inputs).anyMatch(s -> s.getAmount() == 1);
+        final boolean canOnlyCraftOne = Arrays.stream(inputs).anyMatch(s -> s.getAmount() == 1);
 
         for (final Recipe recipe : recipes.get(type)) {
-            final boolean craftable = canCraft != null && canCraft.test(recipe);
-            if (!craftable) {
-                continue;
-            }
-            if (recipe.matches(inputs, consumeInputs)) {
-                if (cache && !canOnlyCraft1) {
+            if (recipe.matches(inputs, () -> canCraft != null && canCraft.test(recipe), consumeInputs)) {
+                if (cache && !canOnlyCraftOne) {
                     recentlyUsed.put(hash, recipe);
                 }
-                return new RecipeSearchResult(recipe, true, true);
+
+                return new RecipeSearchResult(recipe, canCraft != null && canCraft.test(recipe), true);
             }
         }
 
@@ -199,6 +203,16 @@ public class Recipe {
     }
 
     @ParametersAreNonnullByDefault
+    public static @Nonnull RecipeSearchResult searchRecipes(
+        RecipeType type, 
+        ItemStack[] inputs,
+        boolean consumeInputs,
+        Player crafter,
+        boolean sendMessage
+    ) {
+        return searchRecipes(type, inputs, recipe -> recipe.canCraft(crafter, sendMessage), consumeInputs);
+    }
+
     public static @Nonnull RecipeSearchResult searchRecipes(
         RecipeType type, 
         ItemStack[] inputs

@@ -16,12 +16,15 @@ public enum RecipeShape {
      * A recipe with a shuffled RecipeShape will need each
      * item listed in the recipe to be present in the given
      * inputs and vice versa. Orientation and order don't matter.
+     * (i.e. The recipe must equal the inputs up to order 
+     * and positioning)
      */
     SHUFFLED,
     /**
      * A recipe with a containing RecipeShape will only need
      * each item listed in the recipe to be present in the
      * given inputs. Orientation and order don't matter.
+     * (i.e. The recipe must be a subset of the inputs)
      */
-    CONTAINING,
+    SUBSET,
 }

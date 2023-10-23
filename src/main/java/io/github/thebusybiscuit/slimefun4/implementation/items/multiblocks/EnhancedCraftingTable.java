@@ -1,7 +1,5 @@
 package io.github.thebusybiscuit.slimefun4.implementation.items.multiblocks;
 
-import java.util.List;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.bukkit.Material;
@@ -18,7 +16,9 @@ import io.github.bakedlibs.dough.items.ItemUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.Recipe;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.api.recipes.Recipe.RecipeSearchResult;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.implementation.items.backpacks.SlimefunBackpack;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
@@ -32,31 +32,36 @@ public class EnhancedCraftingTable extends AbstractCraftingTable {
     }
 
     @Override
+    public RecipeType getCraftedRecipeType() {
+        return RecipeType.ENHANCED_CRAFTING_TABLE;
+    }
+
+    @Override
     public void onInteract(Player p, Block b) {
         Block possibleDispenser = b.getRelative(BlockFace.DOWN);
         BlockState state = PaperLib.getBlockState(possibleDispenser, false).getState();
 
         if (state instanceof Dispenser dispenser) {
             Inventory inv = dispenser.getInventory();
-            List<ItemStack[]> inputs = RecipeType.getRecipeInputList(this);
-
-            for (int i = 0; i < inputs.size(); i++) {
-                if (isCraftable(inv, inputs.get(i))) {
-                    ItemStack output = RecipeType.getRecipeOutputList(this, inputs.get(i)).clone();
-
-                    if (SlimefunUtils.canPlayerUseItem(p, output, true)) {
-                        craft(inv, possibleDispenser, p, b, output);
-                    }
-
-                    return;
-                }
-            }
 
             if (SlimefunUtils.isInventoryEmpty(inv)) {
                 Slimefun.getLocalization().sendMessage(p, "machines.inventory-empty", true);
-            } else {
-                Slimefun.getLocalization().sendMessage(p, "machines.pattern-not-found", true);
             }
+
+            final RecipeSearchResult searchResult = Recipe.searchRecipes(
+                getCraftedRecipeType(),
+                inv.getContents(),
+                false,
+                p,
+                true
+            );
+
+            if (searchResult.canCraft() && searchResult.recipeExists()) {
+                craft(inv, possibleDispenser, p, b, searchResult.getRecipe().getOutputs()[0]);
+                return;
+            }
+
+            Slimefun.getLocalization().sendMessage(p, "machines.pattern-not-found", true);
         }
     }
 
@@ -86,22 +91,6 @@ public class EnhancedCraftingTable extends AbstractCraftingTable {
         } else {
             Slimefun.getLocalization().sendMessage(p, "machines.full-inventory", true);
         }
-    }
-
-    private boolean isCraftable(Inventory inv, ItemStack[] recipe) {
-        for (int j = 0; j < inv.getContents().length; j++) {
-            if (!SlimefunUtils.isItemSimilar(inv.getContents()[j], recipe[j], true)) {
-                if (SlimefunItem.getByItem(recipe[j]) instanceof SlimefunBackpack) {
-                    if (!SlimefunUtils.isItemSimilar(inv.getContents()[j], recipe[j], false)) {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        return true;
     }
 
 }

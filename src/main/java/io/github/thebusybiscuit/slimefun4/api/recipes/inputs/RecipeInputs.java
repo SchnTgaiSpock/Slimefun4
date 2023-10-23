@@ -2,6 +2,7 @@ package io.github.thebusybiscuit.slimefun4.api.recipes.inputs;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 
@@ -16,7 +17,7 @@ public abstract class RecipeInputs {
     public static final RecipeInputs EMPTY = new RecipeInputs() {
 
         @Override
-        public boolean matches(ItemStack[] inputs, boolean consumeInputs) {
+        public boolean matches(ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
             for (final ItemStack item : inputs) {
                 if (item != null && item.getType() != Material.AIR) {
                     return false;
@@ -42,7 +43,7 @@ public abstract class RecipeInputs {
     public static final RecipeInputs NO_MATCH = new RecipeInputs() {
 
         @Override
-        public boolean matches(ItemStack[] inputs, boolean consumeInputs) {
+        public boolean matches(ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs) {
             return false;
         }
 
@@ -59,7 +60,7 @@ public abstract class RecipeInputs {
 
     };
 
-    public abstract boolean matches(@Nonnull ItemStack[] inputs, boolean consumeInputs);
+    public abstract boolean matches(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs);
     public abstract @Nonnull ItemStack[] getGuideRecipe();
     public abstract boolean isSingleItem();
 
