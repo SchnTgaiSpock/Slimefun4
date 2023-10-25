@@ -24,6 +24,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.player.PlayerBackpack;
 import io.github.thebusybiscuit.slimefun4.api.player.PlayerProfile;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeCrafter;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.implementation.items.backpacks.SlimefunBackpack;
@@ -40,7 +41,7 @@ import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
  * @see ArmorForge
  *
  */
-abstract class AbstractCraftingTable extends MultiBlockMachine {
+abstract class AbstractCraftingTable extends MultiBlockMachine implements RecipeCrafter {
 
     @ParametersAreNonnullByDefault
     AbstractCraftingTable(ItemGroup itemGroup, SlimefunItemStack item, ItemStack[] recipe, BlockFace trigger) {

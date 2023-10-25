@@ -30,6 +30,11 @@ public class ArmorForge extends AbstractCraftingTable {
     }
 
     @Override
+    public RecipeType getCraftedRecipeType() {
+        return RecipeType.ARMOR_FORGE;
+    }
+
+    @Override
     public void onInteract(Player p, Block b) {
         Block possibleDispenser = b.getRelative(BlockFace.DOWN);
         BlockState state = PaperLib.getBlockState(possibleDispenser, false).getState();

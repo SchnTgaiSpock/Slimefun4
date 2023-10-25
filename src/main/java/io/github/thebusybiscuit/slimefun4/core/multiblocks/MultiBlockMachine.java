@@ -45,7 +45,7 @@ import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
  * @see MultiBlock
  *
  */
-public abstract class MultiBlockMachine extends SlimefunItem implements NotPlaceable, RecipeDisplayItem, RecipeCrafter {
+public abstract class MultiBlockMachine extends SlimefunItem implements NotPlaceable, RecipeDisplayItem {
 
     protected final List<ItemStack[]> recipes;
     protected final List<ItemStack> displayRecipes;

@@ -34,8 +34,8 @@ public abstract class RecipeInputs {
         }
 
         @Override
-        public boolean isSingleItem() {
-            return false;
+        public int size() {
+            return 0;
         }
 
     };
@@ -54,15 +54,15 @@ public abstract class RecipeInputs {
         }
 
         @Override
-        public boolean isSingleItem() {
-            return false;
+        public int size() {
+            return 0;
         }
 
     };
 
     public abstract boolean matches(@Nonnull ItemStack[] inputs, Supplier<Boolean> canCraft, boolean consumeInputs);
     public abstract @Nonnull ItemStack[] getGuideRecipe();
-    public abstract boolean isSingleItem();
+    public abstract int size();
 
     @Nonnull
     public List<ItemStack> getGuideBottomRows() {

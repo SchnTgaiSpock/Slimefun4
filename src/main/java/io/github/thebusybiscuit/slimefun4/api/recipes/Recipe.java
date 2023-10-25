@@ -99,6 +99,14 @@ public class Recipe {
         return this.inputs.matches(inputs, canCraft, consumeInputs);
     }
 
+    public RecipeInputs getRecipeInputs() {
+        return inputs;
+    }
+
+    public RecipeOutput getRecipeOutput() {
+        return outputs;
+    }
+
     public ItemStack[] getOutputs() {
         return outputs.getOutputs();
     }
@@ -112,7 +120,7 @@ public class Recipe {
     }
 
     public List<ItemStack> getAsBottomRowRecipe() {
-        if (inputs.isSingleItem() && outputs.isSingleItem()) {
+        if (inputs.size() == 1 && outputs.size() == 1) {
             return List.of(inputs.getGuideRecipe()[0], outputs.getOutputs()[0]);
         } else {
             return Collections.emptyList();
@@ -120,7 +128,7 @@ public class Recipe {
     }
 
     public boolean canCraft(Player crafter, boolean sendMessage) {
-        return !outputs.isSingleItem() || SlimefunUtils.canPlayerUseItem(crafter, getOutputs()[0], sendMessage);
+        return outputs.size() != 1 || SlimefunUtils.canPlayerUseItem(crafter, getOutputs()[0], sendMessage);
     }
 
     public static Map<RecipeType, List<Recipe>> getRecipes() {

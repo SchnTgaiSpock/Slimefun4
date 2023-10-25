@@ -26,11 +26,6 @@ public class MachineInputs extends CraftingGrid {
     }
 
     @Override
-    public boolean isSingleItem() {
-        return getInputs().length == 1;
-    }
-
-    @Override
     public MachineInputs toMachineInput() {
         return this;
     }

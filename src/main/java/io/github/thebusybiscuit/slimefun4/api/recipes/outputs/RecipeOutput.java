@@ -11,8 +11,8 @@ public interface RecipeOutput {
         }
 
         @Override
-        public boolean isSingleItem() {
-            return false;
+        public int size() {
+            return 0;
         }
 
         @Override
@@ -22,7 +22,7 @@ public interface RecipeOutput {
     };
     
     public ItemStack[] getOutputs();
-    public boolean isSingleItem();
+    public int size();
     public boolean checkEnabled();
 
 }

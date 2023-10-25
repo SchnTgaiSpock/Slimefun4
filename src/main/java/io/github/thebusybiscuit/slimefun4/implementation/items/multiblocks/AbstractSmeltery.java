@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import io.github.bakedlibs.dough.inventory.InvUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeCrafter;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
@@ -29,11 +30,16 @@ import io.papermc.lib.PaperLib;
  * @author TheBusyBiscuit
  *
  */
-abstract class AbstractSmeltery extends MultiBlockMachine {
+abstract class AbstractSmeltery extends MultiBlockMachine implements RecipeCrafter {
 
     @ParametersAreNonnullByDefault
     protected AbstractSmeltery(ItemGroup itemGroup, SlimefunItemStack item, ItemStack[] recipe, BlockFace trigger) {
         super(itemGroup, item, recipe, trigger);
+    }
+
+    @Override
+    public RecipeType getCraftedRecipeType() {
+        return RecipeType.SMELTERY;
     }
 
     @Override

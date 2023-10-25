@@ -19,8 +19,8 @@ public class WeightedRecipeOutput implements RecipeOutput {
     }
 
     @Override
-    public boolean isSingleItem() {
-        return outputSet.size() == 1;
+    public int size() {
+        return 1;
     }
 
     @Override

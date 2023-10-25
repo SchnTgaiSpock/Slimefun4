@@ -21,8 +21,8 @@ public class ItemRecipeOutput implements RecipeOutput {
     }
 
     @Override
-    public boolean isSingleItem() {
-        return outputs.length == 1;
+    public int size() {
+        return outputs.length;
     }
 
     @Override

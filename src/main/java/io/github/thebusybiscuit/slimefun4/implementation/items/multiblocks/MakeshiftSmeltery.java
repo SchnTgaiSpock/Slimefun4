@@ -2,6 +2,7 @@ package io.github.thebusybiscuit.slimefun4.implementation.items.multiblocks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -16,6 +17,9 @@ import org.bukkit.inventory.ItemStack;
 import io.github.bakedlibs.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.Recipe;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 
 /**
  * The {@link MakeshiftSmeltery} is a simpler version of the {@link Smeltery}.
@@ -31,6 +35,24 @@ public class MakeshiftSmeltery extends AbstractSmeltery {
     @ParametersAreNonnullByDefault
     public MakeshiftSmeltery(ItemGroup itemGroup, SlimefunItemStack item) {
         super(itemGroup, item, new ItemStack[] { null, new ItemStack(Material.OAK_FENCE), null, new ItemStack(Material.BRICKS), new CustomItemStack(Material.DISPENSER, "Dispenser (Facing up)"), new ItemStack(Material.BRICKS), null, new ItemStack(Material.FLINT_AND_STEEL), null }, BlockFace.DOWN);
+    }
+
+    @Override
+    public boolean canCraft(Recipe recipe) {
+        if (recipe.getRecipeInputs().size() == 1) {
+            final Optional<String> id = Slimefun.getItemDataService().getItemData(recipe.getOutputs()[0]);
+            if (id.isPresent()) {
+                switch (id.get()) {
+                    case "":
+                        
+                        break;
+                
+                    default:
+                        break;
+                }
+            }
+        }
+        
     }
 
     @Override

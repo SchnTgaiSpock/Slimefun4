@@ -31,7 +31,7 @@ public class CraftingGrid extends RecipeInputs {
     private final int width;
     private final int height;
     private final RecipeShape shape;
-    private final boolean singleItem;
+    private final int size;
 
     public CraftingGrid(RecipeComponent<?>[] inputs, int height, int width, RecipeShape shape) {
         this.shape = shape;
@@ -61,11 +61,7 @@ public class CraftingGrid extends RecipeInputs {
                 this.width = 1;
                 break;
         }
-        this.singleItem = Arrays.stream(inputs).reduce(
-            0,
-            (count, item) -> count += (item.isEmpty() ? 0 : 1),
-            Integer::sum
-        ) == 1;
+        this.size = (int) Arrays.stream(inputs).count();
     }
 
     public CraftingGrid(RecipeComponent<?>[] inputs, RecipeShape shape) {
@@ -205,9 +201,11 @@ public class CraftingGrid extends RecipeInputs {
         return List.of();
     }
 
-    public boolean isSingleItem() {
-        return singleItem;
+    @Override
+    public int size() {
+        return size;
     }
+
 
     public MachineInputs toMachineInput() {
         final RecipeComponent<?>[] filteredInputs = Arrays.stream(inputs)

@@ -33,6 +33,11 @@ public class MagicWorkbench extends AbstractCraftingTable {
     }
 
     @Override
+    public RecipeType getCraftedRecipeType() {
+        return RecipeType.MAGIC_WORKBENCH;
+    }
+
+    @Override
     public void onInteract(Player p, Block b) {
         Block possibleDispener = locateDispenser(b);
 
