@@ -85,7 +85,7 @@ public class Recipe {
         protected boolean removeEldestEntry(Map.Entry<Integer, Recipe> eldest) {
             return size() >= CACHE_SIZE;
         };
-    }; // TODO: Only cache when can craft more than 1 of the recipe
+    };
 
     final RecipeInputs inputs;
     final RecipeOutput outputs;

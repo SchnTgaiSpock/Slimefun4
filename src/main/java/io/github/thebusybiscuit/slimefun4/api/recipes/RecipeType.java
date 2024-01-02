@@ -35,16 +35,16 @@ public class RecipeType implements Keyed {
 
     public static final RecipeType MULTIBLOCK = new RecipeType(new NamespacedKey(Slimefun.instance(), "multiblock"), new CustomItemStack(Material.BRICKS, "&bMultiBlock", "", "&a&oBuild it in the World"));
     public static final RecipeType ARMOR_FORGE = new RecipeType(new NamespacedKey(Slimefun.instance(), "armor_forge"), SlimefunItems.ARMOR_FORGE, "", "&a&oCraft it in an Armor Forge");
-    public static final RecipeType GRIND_STONE = new RecipeType(new NamespacedKey(Slimefun.instance(), "grind_stone"), SlimefunItems.GRIND_STONE, "", "&a&oGrind it using the Grind Stone");
-    public static final RecipeType SMELTERY = new RecipeType(new NamespacedKey(Slimefun.instance(), "smeltery"), SlimefunItems.SMELTERY, "", "&a&oSmelt it using a Smeltery");
-    public static final RecipeType ORE_CRUSHER = new RecipeType(new NamespacedKey(Slimefun.instance(), "ore_crusher"), SlimefunItems.ORE_CRUSHER, "", "&a&oCrush it using the Ore Crusher");
+    public static final RecipeType GRIND_STONE = new RecipeType(new NamespacedKey(Slimefun.instance(), "grind_stone"), SlimefunItems.GRIND_STONE, RecipeShape.SUBSET, "", "&a&oGrind it using the Grind Stone");
+    public static final RecipeType SMELTERY = new RecipeType(new NamespacedKey(Slimefun.instance(), "smeltery"), SlimefunItems.SMELTERY, RecipeShape.SUBSET, "", "&a&oSmelt it using a Smeltery");
+    public static final RecipeType ORE_CRUSHER = new RecipeType(new NamespacedKey(Slimefun.instance(), "ore_crusher"), SlimefunItems.ORE_CRUSHER, RecipeShape.SUBSET, "", "&a&oCrush it using the Ore Crusher");
     public static final RecipeType GOLD_PAN = new RecipeType(new NamespacedKey(Slimefun.instance(), "gold_pan"), SlimefunItems.GOLD_PAN, "", "&a&oUse a Gold Pan on Gravel to obtain this Item");
-    public static final RecipeType COMPRESSOR = new RecipeType(new NamespacedKey(Slimefun.instance(), "compressor"), SlimefunItems.COMPRESSOR, "", "&a&oCompress it using the Compressor");
-    public static final RecipeType PRESSURE_CHAMBER = new RecipeType(new NamespacedKey(Slimefun.instance(), "pressure_chamber"), SlimefunItems.PRESSURE_CHAMBER, "", "&a&oCompress it using the Pressure Chamber");
+    public static final RecipeType COMPRESSOR = new RecipeType(new NamespacedKey(Slimefun.instance(), "compressor"), SlimefunItems.COMPRESSOR, RecipeShape.SUBSET, "", "&a&oCompress it using the Compressor");
+    public static final RecipeType PRESSURE_CHAMBER = new RecipeType(new NamespacedKey(Slimefun.instance(), "pressure_chamber"), SlimefunItems.PRESSURE_CHAMBER, RecipeShape.SUBSET, "", "&a&oCompress it using the Pressure Chamber");
     public static final RecipeType MAGIC_WORKBENCH = new RecipeType(new NamespacedKey(Slimefun.instance(), "magic_workbench"), SlimefunItems.MAGIC_WORKBENCH, "", "&a&oCraft it in a Magic Workbench");
-    public static final RecipeType ORE_WASHER = new RecipeType(new NamespacedKey(Slimefun.instance(), "ore_washer"), SlimefunItems.ORE_WASHER, "", "&a&oWash it in an Ore Washer");
+    public static final RecipeType ORE_WASHER = new RecipeType(new NamespacedKey(Slimefun.instance(), "ore_washer"), SlimefunItems.ORE_WASHER, RecipeShape.SUBSET, "", "&a&oWash it in an Ore Washer");
     public static final RecipeType ENHANCED_CRAFTING_TABLE = new RecipeType(new NamespacedKey(Slimefun.instance(), "enhanced_crafting_table"), SlimefunItems.ENHANCED_CRAFTING_TABLE, "", "&a&oA regular Crafting Table cannot", "&a&ohold this massive Amount of Power...");
-    public static final RecipeType JUICER = new RecipeType(new NamespacedKey(Slimefun.instance(), "juicer"), SlimefunItems.JUICER, "", "&a&oUsed for Juice Creation");
+    public static final RecipeType JUICER = new RecipeType(new NamespacedKey(Slimefun.instance(), "juicer"), SlimefunItems.JUICER, RecipeShape.SUBSET, "", "&a&oUsed for Juice Creation");
 
     public static final RecipeType ANCIENT_ALTAR = new RecipeType(new NamespacedKey(Slimefun.instance(), "ancient_altar"), SlimefunItems.ANCIENT_ALTAR, (recipe, output) -> {
         AltarRecipe altarRecipe = new AltarRecipe(Arrays.asList(recipe), output);
@@ -66,16 +66,28 @@ public class RecipeType implements Keyed {
 
     public static final RecipeType NULL = new RecipeType();
 
-    private final ItemStack item;
     private final NamespacedKey key;
+    private final ItemStack item;
+    private final RecipeShape defaultShape;
 
-    private RecipeType() {
-        this.item = null;
-        this.key = new NamespacedKey(Slimefun.instance(), "null");
+    public RecipeType(NamespacedKey key, ItemStack item, RecipeShape defaultShape) {
+        this.key = key;
+        this.item = item;
+        this.defaultShape = defaultShape;
     }
 
-    public RecipeType(ItemStack item, String id) {
+    public RecipeType(NamespacedKey key, ItemStack item) {
+        this(key, item, RecipeShape.TRANSLATED);
+    }
+
+    private RecipeType() {
+        this(new NamespacedKey(Slimefun.instance(), "null"), null);
+    }
+
+    @Deprecated
+    public RecipeType(ItemStack item, String id, RecipeShape defaultShape) {
         this.item = item;
+        this.defaultShape = defaultShape;
 
         if (id.length() > 0) {
             this.key = new NamespacedKey(Slimefun.instance(), id.toLowerCase(Locale.ROOT));
@@ -84,24 +96,29 @@ public class RecipeType implements Keyed {
         }
     }
 
+    @Deprecated
+    public RecipeType(ItemStack item, String id) {
+        this(item, id, RecipeShape.TRANSLATED);
+    }
+
+    public RecipeType(NamespacedKey key, SlimefunItemStack slimefunItem, RecipeShape shape, String... lore) {
+        this(key, new CustomItemStack(slimefunItem, null, lore), shape);
+    }
+
     public RecipeType(NamespacedKey key, SlimefunItemStack slimefunItem, String... lore) {
         this(key, new CustomItemStack(slimefunItem, null, lore));
     }
 
     @Deprecated
     public RecipeType(NamespacedKey key, ItemStack item, BiConsumer<ItemStack[], ItemStack> callback, String... lore) {
-        this.item = new CustomItemStack(item, null, lore);
-        this.key = key;
-    }
-
-    public RecipeType(NamespacedKey key, ItemStack item) {
-        this.key = key;
-        this.item = item;
+        this(key, new CustomItemStack(item, null, lore));
     }
 
     public RecipeType(MinecraftRecipe<?> recipe) {
-        this.item = new ItemStack(recipe.getMachine());
-        this.key = NamespacedKey.minecraft(recipe.getRecipeClass().getSimpleName().toLowerCase(Locale.ROOT).replace("recipe", ""));
+        this(
+            NamespacedKey.minecraft(recipe.getRecipeClass().getSimpleName().toLowerCase(Locale.ROOT).replace("recipe", "")),
+            new ItemStack(recipe.getMachine())
+        );
     }
 
     /**
@@ -135,6 +152,10 @@ public class RecipeType implements Keyed {
     @Override
     public final @Nonnull NamespacedKey getKey() {
         return key;
+    }
+
+    public @Nonnull RecipeShape getDefaultShape() {
+        return defaultShape;
     }
 
     @Override

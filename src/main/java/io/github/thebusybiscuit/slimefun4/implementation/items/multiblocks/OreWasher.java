@@ -21,6 +21,8 @@ import org.bukkit.inventory.ItemStack;
 
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeCrafter;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.implementation.SlimefunItems;
@@ -35,7 +37,7 @@ import io.papermc.lib.PaperLib;
  * @author Sfiguz7
  *
  */
-public class OreWasher extends MultiBlockMachine {
+public class OreWasher extends MultiBlockMachine implements RecipeCrafter {
 
     // @formatter:off
     private final ItemStack[] dusts = new ItemStack[] {
@@ -64,6 +66,11 @@ public class OreWasher extends MultiBlockMachine {
         // @formatter:on
 
         legacyMode = Slimefun.getCfg().getBoolean("options.legacy-ore-washer");
+    }
+
+    @Override
+    public RecipeType getCraftedRecipeType() {
+        return RecipeType.ORE_WASHER;
     }
 
     @Override

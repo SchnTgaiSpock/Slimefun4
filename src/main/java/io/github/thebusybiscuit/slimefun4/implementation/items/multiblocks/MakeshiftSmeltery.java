@@ -18,7 +18,6 @@ import io.github.bakedlibs.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.Recipe;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 
 /**
@@ -39,20 +38,37 @@ public class MakeshiftSmeltery extends AbstractSmeltery {
 
     @Override
     public boolean canCraft(Recipe recipe) {
-        if (recipe.getRecipeInputs().size() == 1) {
-            final Optional<String> id = Slimefun.getItemDataService().getItemData(recipe.getOutputs()[0]);
-            if (id.isPresent()) {
-                switch (id.get()) {
-                    case "":
-                        
-                        break;
-                
-                    default:
-                        break;
-                }
-            }
+        if (recipe.getRecipeOutput().size() != 1) {
+            return false;
         }
-        
+
+        final ItemStack output = recipe.getOutputs()[0];
+        final Optional<String> outputId = Slimefun.getItemDataService().getItemData(output);
+        if (outputId.isPresent()) {
+            return output.getType() == Material.IRON_INGOT;
+        }
+
+        return switch (outputId.get()) {
+            case "MAGNESIUM_INGOT",
+                 "ALUMINUM_INGOT",
+                 "COPPER_INGOT",
+                 "ZINC_INGOT",
+                 "SILVER_INGOT",
+                 "TIN_INGOT",
+                 "GOLD_4K",
+                 "GOLD_6K",
+                 "GOLD_8K",
+                 "GOLD_10K",
+                 "GOLD_12K",
+                 "GOLD_14K",
+                 "GOLD_16K",
+                 "GOLD_18K",
+                 "GOLD_20K",
+                 "GOLD_22K",
+                 "GOLD_24K",
+                 "LEAD_INGOT" -> true;
+            default -> false;
+        };
     }
 
     @Override

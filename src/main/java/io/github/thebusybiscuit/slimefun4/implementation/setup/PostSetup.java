@@ -133,7 +133,7 @@ public final class PostSetup {
         if (grinder != null) {
             ItemStack[] input = null;
 
-            for (ItemStack[] recipe : grinder.getRecipes()) {
+            for (ItemStack[] recipe : grinder.getDisplayRecipes()) {
                 if (input == null) {
                     input = recipe;
                 } else {

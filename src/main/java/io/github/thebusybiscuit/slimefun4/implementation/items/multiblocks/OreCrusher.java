@@ -23,6 +23,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemSetting;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeCrafter;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
@@ -37,7 +38,7 @@ import io.papermc.lib.PaperLib;
  * @author TheBusyBiscuit
  *
  */
-public class OreCrusher extends MultiBlockMachine {
+public class OreCrusher extends MultiBlockMachine implements RecipeCrafter {
 
     private final DoubleOreSetting doubleOres = new DoubleOreSetting(this);
 
@@ -46,6 +47,11 @@ public class OreCrusher extends MultiBlockMachine {
         super(itemGroup, item, new ItemStack[] { null, null, null, null, new ItemStack(Material.NETHER_BRICK_FENCE), null, new ItemStack(Material.IRON_BARS), new CustomItemStack(Material.DISPENSER, "Dispenser (Facing up)"), new ItemStack(Material.IRON_BARS) }, BlockFace.SELF);
 
         addItemSetting(doubleOres);
+    }
+
+    @Override
+    public RecipeType getCraftedRecipeType() {
+        return RecipeType.ORE_CRUSHER;
     }
 
     @Override

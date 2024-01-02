@@ -19,13 +19,14 @@ import org.bukkit.inventory.ItemStack;
 import io.github.bakedlibs.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeCrafter;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 import io.papermc.lib.PaperLib;
 
-public class PressureChamber extends MultiBlockMachine {
+public class PressureChamber extends MultiBlockMachine implements RecipeCrafter {
 
     @ParametersAreNonnullByDefault
     public PressureChamber(ItemGroup itemGroup, SlimefunItemStack item) {
@@ -35,6 +36,11 @@ public class PressureChamber extends MultiBlockMachine {
     @Override
     public List<ItemStack> getDisplayRecipes() {
         return recipes.stream().map(items -> items[0]).collect(Collectors.toList());
+    }
+
+    @Override
+    public RecipeType getCraftedRecipeType() {
+        return RecipeType.PRESSURE_CHAMBER;
     }
 
     @Override
